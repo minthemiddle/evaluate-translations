@@ -49,15 +49,16 @@ def review_translations(translations, filename, target_langs):
         for lang in target_langs:
             click.echo(f"Translation ({lang}): {trans.get(lang, 'N/A')}")
         
-        choice = click.prompt("\nEnter 'n' for next, 'p' for previous, 'c' for next company, or 'q' to quit", type=click.Choice(['n', 'p', 'c', 'q']))
+        choice = click.prompt("\nPress Enter for next, or enter 'p' for previous, 'c' for next company, or 'q' to quit", 
+                              type=click.Choice(['', 'n', 'p', 'c', 'q']), default='', show_default=False)
         
-        if choice == 'n':
+        if choice in ['', 'n']:
             current = min(current + 1, total - 1)
         elif choice == 'p':
             current = max(current - 1, 0)
         elif choice == 'c':
             return 'next_company'
-        else:
+        elif choice == 'q':
             return 'quit'
 
 @click.command()
