@@ -93,20 +93,25 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
                 return False
         return True
 
-    def review_nested(data: Dict[str, Any], prefix: str = ''):
-        for key, value in data.items():
-            full_key = f"{prefix}.{key}" if prefix else key
-            if isinstance(value, dict):
-                if not review_nested(value, full_key):
+    def review_translations(data: Dict[str, Any], prefix: str = ''):
+        if 'description' in data and 'translations' in data['description']:
+            original = data['description'].get(original_lang, '')
+            translation = data['description']['translations'].get(trans_lang, '')
+            if translation:
+                if not review_field(f"{prefix}description", original, translation):
                     return False
-            elif isinstance(value, str):
-                original = data.get(original_lang, '')
-                translation = data.get(trans_lang, '')
-                if not review_field(full_key, original, translation):
-                    return False
+
+        if 'media' in data:
+            for i, item in enumerate(data['media']):
+                if 'content' in item and 'translations' in item['content']:
+                    original = item['content'].get(original_lang, '')
+                    translation = item['content']['translations'].get(trans_lang, '')
+                    if translation:
+                        if not review_field(f"{prefix}media[{i}].content", original, translation):
+                            return False
         return True
 
-    review_nested(json_data)
+    review_translations(json_data)
     
     c.execute("INSERT OR REPLACE INTO reviewed_files (filename, reviewed) VALUES (?, 1)", (filename,))
     conn.commit()
