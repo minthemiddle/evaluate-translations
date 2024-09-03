@@ -5,28 +5,33 @@ import click
 def check_translations(json_data):
     translations = {}
     
+    def update_translations(trans_dict):
+        for lang, value in trans_dict.items():
+            if isinstance(value, str):
+                translations.setdefault(lang, set()).add(value)
+    
     # Check translations in description
     if 'description' in json_data and 'translations' in json_data['description']:
-        translations.update(json_data['description']['translations'])
+        update_translations(json_data['description']['translations'])
     
     # Check translations in media
     if 'media' in json_data:
         for item in json_data['media']:
             if 'content' in item and 'translations' in item['content']:
-                translations.update(item['content']['translations'])
+                update_translations(item['content']['translations'])
     
     # Check translations in shortDescription
     if 'shortDescription' in json_data and 'de' in json_data['shortDescription']:
-        translations['de'] = json_data['shortDescription']['de']
+        translations.setdefault('de', set()).add(json_data['shortDescription']['de'])
     
     # Check translations in longDescription
     if 'longDescription' in json_data and 'de' in json_data['longDescription']:
-        translations['de'] = json_data['longDescription']['de']
+        translations.setdefault('de', set()).add(json_data['longDescription']['de'])
     
     # Check for duplicates
-    translation_values = list(translations.values())
-    if len(translation_values) != len(set(translation_values)):
-        return False  # There are duplicate translations
+    for lang_translations in translations.values():
+        if len(lang_translations) > 1:
+            return False  # There are duplicate translations
     return True  # All translations are unique
 
 @click.command()
