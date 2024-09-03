@@ -8,12 +8,14 @@ def check_translations(json_data):
     
     def update_translations(trans_dict, source=''):
         for lang, value in trans_dict.items():
-            if isinstance(value, str) and lang != original_lang:
+            if isinstance(value, str):
                 translations.setdefault(lang, set()).add((value, source))
     
     # Check translations in description
-    if 'description' in json_data and 'translations' in json_data['description']:
-        update_translations(json_data['description']['translations'], 'description')
+    if 'description' in json_data:
+        update_translations({original_lang: json_data['description'].get(original_lang, '')}, 'description')
+        if 'translations' in json_data['description']:
+            update_translations(json_data['description']['translations'], 'description')
     
     # Check translations in media
     if 'media' in json_data:
@@ -29,20 +31,15 @@ def check_translations(json_data):
     if 'longDescription' in json_data:
         update_translations(json_data['longDescription'], 'longDescription')
     
-    # Check for duplicates
-    for lang, lang_translations in translations.items():
-        value_counts = {}
+    # Check for duplicates across all languages
+    all_translations = set()
+    for lang_translations in translations.values():
         for value, source in lang_translations:
-            value_counts[value] = value_counts.get(value, 0) + 1
-        
-        duplicates = [value for value, count in value_counts.items() if count > 1]
-        if duplicates:
-            # Check if duplicates are not in the original language
-            if any(duplicate not in json_data.get(field, {}).get(original_lang, '') 
-                   for duplicate in duplicates 
-                   for field in ['description', 'shortDescription', 'longDescription']):
-                return False  # There are duplicate translations not in the original language
-    return True  # All translations are unique or duplicates are in the original language
+            if value in all_translations and lang != original_lang:
+                return False  # Duplicate translation found
+            all_translations.add(value)
+    
+    return True  # No duplicates found
 
 @click.command()
 @click.argument('folder_path', type=click.Path(exists=True, file_okay=False))
