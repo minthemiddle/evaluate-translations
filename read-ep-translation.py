@@ -1,6 +1,32 @@
 import os
 import json
 import click
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect('processed_files.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS processed_files
+    (filename TEXT PRIMARY KEY)
+    ''')
+    conn.commit()
+    conn.close()
+
+def mark_as_processed(filename):
+    conn = sqlite3.connect('processed_files.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT OR REPLACE INTO processed_files (filename) VALUES (?)', (filename,))
+    conn.commit()
+    conn.close()
+
+def is_processed(filename):
+    conn = sqlite3.connect('processed_files.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT 1 FROM processed_files WHERE filename = ?', (filename,))
+    result = cursor.fetchone() is not None
+    conn.close()
+    return result
 
 def load_json_files(folder_path):
     json_files = []
@@ -69,16 +95,26 @@ def main(folder, to):
         click.echo("Error: You can select up to 3 target languages.")
         return
 
+    init_db()
     json_files = load_json_files(folder)
     
     for filename, json_data in json_files:
+        if is_processed(filename):
+            click.echo(f"Skipping processed file: {filename}")
+            continue
+
         translations = get_translations(json_data, to)
         if translations:
             result = review_translations(translations, filename, to)
             if result == 'quit':
                 break
             elif result == 'next_company':
+                mark_as_processed(filename)
                 continue
+        else:
+            click.echo(f"No translations found for {filename}")
+        
+        mark_as_processed(filename)
         
         if not click.confirm("Continue to the next file?"):
             break
