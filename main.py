@@ -1,6 +1,18 @@
 import os
 import json
 import click
+import sqlite3
+from typing import Dict, Any
+
+def init_db():
+    conn = sqlite3.connect('translation_review.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS reviewed_files
+                 (filename TEXT PRIMARY KEY, reviewed INTEGER)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS comments
+                 (filename TEXT, field TEXT, comment TEXT)''')
+    conn.commit()
+    conn.close()
 
 def check_translations(json_data):
     translations = {}
@@ -57,10 +69,54 @@ def check_translations(json_data):
     
     return duplicates, empty_translations
 
+def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str):
+    conn = sqlite3.connect('translation_review.db')
+    c = conn.cursor()
+
+    def review_field(field_name: str, original: str, translation: str):
+        click.echo(f"\nField: {field_name}")
+        click.echo(f"Original: {original}")
+        click.echo(f"Translation ({trans_lang}): {translation}")
+        
+        while True:
+            action = click.prompt("Actions: [n]ext, [c]omment, [q]uit", type=click.Choice(['n', 'c', 'q']), show_choices=False)
+            if action == 'n':
+                break
+            elif action == 'c':
+                comment = click.prompt("Enter your comment")
+                c.execute("INSERT INTO comments (filename, field, comment) VALUES (?, ?, ?)", (filename, field_name, comment))
+                conn.commit()
+            elif action == 'q':
+                return False
+        return True
+
+    def review_nested(data: Dict[str, Any], prefix: str = ''):
+        for key, value in data.items():
+            full_key = f"{prefix}.{key}" if prefix else key
+            if isinstance(value, dict):
+                if not review_nested(value, full_key):
+                    return False
+            elif isinstance(value, str):
+                original = json_data.get(full_key, {}).get(json_data['language'], '')
+                translation = value.get(trans_lang, '')
+                if not review_field(full_key, original, translation):
+                    return False
+        return True
+
+    review_nested(json_data)
+    
+    c.execute("INSERT OR REPLACE INTO reviewed_files (filename, reviewed) VALUES (?, 1)", (filename,))
+    conn.commit()
+    conn.close()
+
 @click.command()
 @click.argument('folder_path', type=click.Path(exists=True, file_okay=False))
-def check_json_translations(folder_path):
+@click.option('--interactive', '-i', is_flag=True, help="Enable interactive mode")
+@click.option('--lang', '-l', default='en', help="Translation language to review")
+def check_json_translations(folder_path, interactive, lang):
     """Check translations in JSON files in the specified folder."""
+    if interactive:
+        init_db()
     for filename in os.listdir(folder_path):
         if filename.endswith('.json'):
             file_path = os.path.join(folder_path, filename)
@@ -68,19 +124,33 @@ def check_json_translations(folder_path):
                 try:
                     json_data = json.load(file)
                     duplicates, empty_translations = check_translations(json_data)
-                    if duplicates:
-                        click.echo(f'Duplicate translations found in {filename}:')
-                        for value, lang, (orig_lang, orig_source), source in duplicates:
-                            click.echo(f'  Value: "{value}"')
-                            click.echo(f'    Found in: {lang} ({source})')
-                            click.echo(f'    Original: {orig_lang} ({orig_source})')
-                            click.echo('')
-                    if empty_translations:
-                        click.echo(f'Empty translations found in {filename}:')
-                        for lang, source in empty_translations:
-                            click.echo(f'  Language: {lang}')
-                            click.echo(f'  Source: {source}')
-                            click.echo('')
+                    
+                    if interactive:
+                        conn = sqlite3.connect('translation_review.db')
+                        c = conn.cursor()
+                        c.execute("SELECT reviewed FROM reviewed_files WHERE filename = ?", (filename,))
+                        result = c.fetchone()
+                        conn.close()
+                        
+                        if result is None or result[0] == 0:
+                            click.echo(f"\nReviewing {filename}:")
+                            interactive_review(json_data, filename, lang)
+                        else:
+                            click.echo(f"\nSkipping {filename} (already reviewed)")
+                    else:
+                        if duplicates:
+                            click.echo(f'Duplicate translations found in {filename}:')
+                            for value, lang, (orig_lang, orig_source), source in duplicates:
+                                click.echo(f'  Value: "{value}"')
+                                click.echo(f'    Found in: {lang} ({source})')
+                                click.echo(f'    Original: {orig_lang} ({orig_source})')
+                                click.echo('')
+                        if empty_translations:
+                            click.echo(f'Empty translations found in {filename}:')
+                            for lang, source in empty_translations:
+                                click.echo(f'  Language: {lang}')
+                                click.echo(f'  Source: {source}')
+                                click.echo('')
                 except json.JSONDecodeError:
                     click.echo(f'Error decoding JSON in {filename}')
 
