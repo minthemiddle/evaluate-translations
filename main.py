@@ -10,7 +10,7 @@ def check_translations(json_data):
     
     def update_translations(trans_dict, source=''):
         for lang, value in trans_dict.items():
-            if isinstance(value, str):
+            if isinstance(value, str) and value.strip():  # Only add non-empty strings
                 translations.setdefault(lang, set()).add((value, source))
     
     # Check translations in description
@@ -21,7 +21,7 @@ def check_translations(json_data):
             update_translations(json_data['description']['translations'], 'description')
             if original_desc:
                 for lang, value in json_data['description']['translations'].items():
-                    if not value:
+                    if not value.strip():
                         empty_translations.append((lang, 'description'))
     
     # Check translations in media
@@ -32,7 +32,7 @@ def check_translations(json_data):
                 update_translations(item['content']['translations'], 'media')
                 if original_content:
                     for lang, value in item['content']['translations'].items():
-                        if not value:
+                        if not value.strip():
                             empty_translations.append((lang, 'media'))
     
     # Check for duplicates across all languages
