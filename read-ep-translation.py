@@ -49,14 +49,16 @@ def review_translations(translations, filename, target_langs):
         for lang in target_langs:
             click.echo(f"Translation ({lang}): {trans.get(lang, 'N/A')}")
         
-        choice = click.prompt("\nEnter 'n' for next, 'p' for previous, or 'q' to quit", type=click.Choice(['n', 'p', 'q']))
+        choice = click.prompt("\nEnter 'n' for next, 'p' for previous, 'c' for next company, or 'q' to quit", type=click.Choice(['n', 'p', 'c', 'q']))
         
         if choice == 'n':
             current = min(current + 1, total - 1)
         elif choice == 'p':
             current = max(current - 1, 0)
+        elif choice == 'c':
+            return 'next_company'
         else:
-            return
+            return 'quit'
 
 @click.command()
 @click.option('--folder', required=True, help='Path to the folder containing JSON files')
@@ -71,7 +73,11 @@ def main(folder, to):
     for filename, json_data in json_files:
         translations = get_translations(json_data, to)
         if translations:
-            review_translations(translations, filename, to)
+            result = review_translations(translations, filename, to)
+            if result == 'quit':
+                break
+            elif result == 'next_company':
+                continue
         
         if not click.confirm("Continue to the next file?"):
             break
