@@ -12,6 +12,21 @@ def check_translations(json_data):
         for lang, value in trans_dict.items():
             if isinstance(value, str) and value.strip():  # Only add non-empty strings
                 translations.setdefault(lang, set()).add((value, source))
+            elif isinstance(value, dict):
+                # Handle nested dictionaries
+                for nested_key, nested_value in value.items():
+                    if isinstance(nested_value, str) and nested_value.strip():
+                        translations.setdefault(lang, set()).add((nested_value, f"{source}.{nested_key}"))
+    
+    def check_empty_translations(trans_dict, source=''):
+        for lang, value in trans_dict.items():
+            if isinstance(value, str) and not value.strip():
+                empty_translations.append((lang, source))
+            elif isinstance(value, dict):
+                # Handle nested dictionaries
+                for nested_key, nested_value in value.items():
+                    if isinstance(nested_value, str) and not nested_value.strip():
+                        empty_translations.append((lang, f"{source}.{nested_key}"))
     
     # Check translations in description
     if 'description' in json_data:
@@ -20,9 +35,7 @@ def check_translations(json_data):
         if 'translations' in json_data['description']:
             update_translations(json_data['description']['translations'], 'description')
             if original_desc:
-                for lang, value in json_data['description']['translations'].items():
-                    if not value.strip():
-                        empty_translations.append((lang, 'description'))
+                check_empty_translations(json_data['description']['translations'], 'description')
     
     # Check translations in media
     if 'media' in json_data:
@@ -31,9 +44,7 @@ def check_translations(json_data):
                 original_content = item['content'].get(original_lang, '')
                 update_translations(item['content']['translations'], 'media')
                 if original_content:
-                    for lang, value in item['content']['translations'].items():
-                        if not value.strip():
-                            empty_translations.append((lang, 'media'))
+                    check_empty_translations(item['content']['translations'], 'media')
     
     # Check for duplicates across all languages
     all_translations = {}
