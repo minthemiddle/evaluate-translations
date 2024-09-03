@@ -81,6 +81,12 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
         click.echo(f"Kind: {kind}")
         click.echo(f"Original ({original_lang}): {json.dumps(original, ensure_ascii=False, indent=2)}")
         click.echo(f"Translation ({trans_lang}): {json.dumps(translation, ensure_ascii=False, indent=2)}")
+    
+        if isinstance(original, dict) and original_lang in original:
+            click.echo(f"Original content ({original_lang}): {json.dumps(original[original_lang], ensure_ascii=False, indent=2)}")
+    
+        if isinstance(translation, dict) and trans_lang in translation:
+            click.echo(f"Translated content ({trans_lang}): {json.dumps(translation[trans_lang], ensure_ascii=False, indent=2)}")
         
         while True:
             action = click.prompt("Actions: [n]ext, [c]omment, [q]uit", type=click.Choice(['n', 'c', 'q']), show_choices=False)
@@ -96,8 +102,8 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
 
     def review_translations(data: Dict[str, Any], prefix: str = ''):
         if 'description' in data:
-            original = data['description'].get(original_lang, '')
-            translation = data['description'].get('translations', {}).get(trans_lang, '')
+            original = data['description']
+            translation = data['description'].get('translations', {})
             if not review_field(f"{prefix}description", "description", original, translation):
                 return False
 
@@ -105,8 +111,8 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
             for i, item in enumerate(data['media']):
                 if 'content' in item:
                     kind = item.get('kind', 'unknown')
-                    original = item['content'].get(original_lang, {})
-                    translation = item['content'].get('translations', {}).get(trans_lang, {})
+                    original = item['content']
+                    translation = item['content'].get('translations', {})
                     if not review_field(f"{prefix}media[{i}]", kind, original, translation):
                         return False
         return True
