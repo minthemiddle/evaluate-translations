@@ -31,10 +31,13 @@ def check_translations(json_data):
     
     # Check for duplicates
     for lang, lang_translations in translations.items():
-        unique_translations = set(value for value, _ in lang_translations)
-        if len(lang_translations) > len(unique_translations):
+        value_counts = {}
+        for value, source in lang_translations:
+            value_counts[value] = value_counts.get(value, 0) + 1
+        
+        duplicates = [value for value, count in value_counts.items() if count > 1]
+        if duplicates:
             # Check if duplicates are not in the original language
-            duplicates = [value for value, _ in lang_translations if lang_translations.count((value, _)) > 1]
             if any(duplicate not in json_data.get(field, {}).get(original_lang, '') 
                    for duplicate in duplicates 
                    for field in ['description', 'shortDescription', 'longDescription']):
