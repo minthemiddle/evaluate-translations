@@ -31,9 +31,15 @@ def check_translations(json_data):
     
     # Check for duplicates
     for lang, lang_translations in translations.items():
-        if len(lang_translations) > len(set(value for value, _ in lang_translations)):
-            return False  # There are duplicate translations
-    return True  # All translations are unique
+        unique_translations = set(value for value, _ in lang_translations)
+        if len(lang_translations) > len(unique_translations):
+            # Check if duplicates are not in the original language
+            duplicates = [value for value, _ in lang_translations if lang_translations.count((value, _)) > 1]
+            if any(duplicate not in json_data.get(field, {}).get(original_lang, '') 
+                   for duplicate in duplicates 
+                   for field in ['description', 'shortDescription', 'longDescription']):
+                return False  # There are duplicate translations not in the original language
+    return True  # All translations are unique or duplicates are in the original language
 
 @click.command()
 @click.argument('folder_path', type=click.Path(exists=True, file_okay=False))
