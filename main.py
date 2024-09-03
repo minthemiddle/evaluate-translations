@@ -4,33 +4,34 @@ import click
 
 def check_translations(json_data):
     translations = {}
+    original_lang = json_data.get('language', 'en')  # Annahme: Standardsprache ist Englisch
     
-    def update_translations(trans_dict):
+    def update_translations(trans_dict, source=''):
         for lang, value in trans_dict.items():
-            if isinstance(value, str):
-                translations.setdefault(lang, set()).add(value)
+            if isinstance(value, str) and lang != original_lang:
+                translations.setdefault(lang, set()).add((value, source))
     
     # Check translations in description
     if 'description' in json_data and 'translations' in json_data['description']:
-        update_translations(json_data['description']['translations'])
+        update_translations(json_data['description']['translations'], 'description')
     
     # Check translations in media
     if 'media' in json_data:
         for item in json_data['media']:
             if 'content' in item and 'translations' in item['content']:
-                update_translations(item['content']['translations'])
+                update_translations(item['content']['translations'], 'media')
     
     # Check translations in shortDescription
-    if 'shortDescription' in json_data and 'de' in json_data['shortDescription']:
-        translations.setdefault('de', set()).add(json_data['shortDescription']['de'])
+    if 'shortDescription' in json_data:
+        update_translations(json_data['shortDescription'], 'shortDescription')
     
     # Check translations in longDescription
-    if 'longDescription' in json_data and 'de' in json_data['longDescription']:
-        translations.setdefault('de', set()).add(json_data['longDescription']['de'])
+    if 'longDescription' in json_data:
+        update_translations(json_data['longDescription'], 'longDescription')
     
     # Check for duplicates
-    for lang_translations in translations.values():
-        if len(lang_translations) > 1:
+    for lang, lang_translations in translations.items():
+        if len(lang_translations) > len(set(value for value, _ in lang_translations)):
             return False  # There are duplicate translations
     return True  # All translations are unique
 
