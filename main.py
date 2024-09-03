@@ -94,19 +94,19 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
         return True
 
     def review_translations(data: Dict[str, Any], prefix: str = ''):
-        if 'description' in data and 'translations' in data['description']:
+        if 'description' in data:
             original = data['description'].get(original_lang, '')
-            translation = data['description']['translations'].get(trans_lang, '')
-            if translation:
+            translation = data['description'].get('translations', {}).get(trans_lang, '')
+            if original or translation:
                 if not review_field(f"{prefix}description", original, translation):
                     return False
 
         if 'media' in data:
             for i, item in enumerate(data['media']):
-                if 'content' in item and 'translations' in item['content']:
+                if 'content' in item:
                     original = item['content'].get(original_lang, '')
-                    translation = item['content']['translations'].get(trans_lang, '')
-                    if translation:
+                    translation = item['content'].get('translations', {}).get(trans_lang, '')
+                    if original or translation:
                         if not review_field(f"{prefix}media[{i}].content", original, translation):
                             return False
         return True
