@@ -24,14 +24,6 @@ def check_translations(json_data):
             if 'content' in item and 'translations' in item['content']:
                 update_translations(item['content']['translations'], 'media')
     
-    # Check translations in shortDescription
-    if 'shortDescription' in json_data:
-        update_translations(json_data['shortDescription'], 'shortDescription')
-    
-    # Check translations in longDescription
-    if 'longDescription' in json_data:
-        update_translations(json_data['longDescription'], 'longDescription')
-    
     # Check for duplicates across all languages
     all_translations = {}
     for lang, lang_translations in translations.items():
