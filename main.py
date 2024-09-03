@@ -73,9 +73,12 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
     conn = sqlite3.connect('translation_review.db')
     c = conn.cursor()
 
+    # Get the original language, default to 'en' if not present
+    original_lang = json_data.get('language', 'en')
+
     def review_field(field_name: str, original: str, translation: str):
         click.echo(f"\nField: {field_name}")
-        click.echo(f"Original: {original}")
+        click.echo(f"Original ({original_lang}): {original}")
         click.echo(f"Translation ({trans_lang}): {translation}")
         
         while True:
@@ -97,8 +100,8 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
                 if not review_nested(value, full_key):
                     return False
             elif isinstance(value, str):
-                original = json_data.get(full_key, {}).get(json_data['language'], '')
-                translation = value.get(trans_lang, '')
+                original = data.get(original_lang, '')
+                translation = data.get(trans_lang, '')
                 if not review_field(full_key, original, translation):
                     return False
         return True
