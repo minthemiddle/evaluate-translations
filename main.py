@@ -33,7 +33,7 @@ def check_translations(json_data):
     
     # Check for duplicates across all languages
     all_translations = set()
-    for lang_translations in translations.values():
+    for lang, lang_translations in translations.items():
         for value, source in lang_translations:
             if value in all_translations and lang != original_lang:
                 return False  # Duplicate translation found
