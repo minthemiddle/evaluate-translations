@@ -5,6 +5,7 @@ import click
 def check_translations(json_data):
     translations = {}
     original_lang = json_data.get('language', 'en')  # Annahme: Standardsprache ist Englisch
+    duplicates = []
     
     def update_translations(trans_dict, source=''):
         for lang, value in trans_dict.items():
@@ -32,14 +33,15 @@ def check_translations(json_data):
         update_translations(json_data['longDescription'], 'longDescription')
     
     # Check for duplicates across all languages
-    all_translations = set()
+    all_translations = {}
     for lang, lang_translations in translations.items():
         for value, source in lang_translations:
             if value in all_translations and lang != original_lang:
-                return False  # Duplicate translation found
-            all_translations.add(value)
+                duplicates.append((value, lang, all_translations[value], source))
+            else:
+                all_translations[value] = (lang, source)
     
-    return True  # No duplicates found
+    return duplicates
 
 @click.command()
 @click.argument('folder_path', type=click.Path(exists=True, file_okay=False))
@@ -51,8 +53,14 @@ def check_json_translations(folder_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 try:
                     json_data = json.load(file)
-                    if not check_translations(json_data):
-                        click.echo(f'Duplicate translations found in {filename}')
+                    duplicates = check_translations(json_data)
+                    if duplicates:
+                        click.echo(f'Duplicate translations found in {filename}:')
+                        for value, lang, (orig_lang, orig_source), source in duplicates:
+                            click.echo(f'  Value: "{value}"')
+                            click.echo(f'    Found in: {lang} ({source})')
+                            click.echo(f'    Original: {orig_lang} ({orig_source})')
+                            click.echo('')
                 except json.JSONDecodeError:
                     click.echo(f'Error decoding JSON in {filename}')
 
