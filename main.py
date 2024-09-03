@@ -76,10 +76,10 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
     # Get the original language, default to 'en' if not present
     original_lang = json_data.get('language', 'en')
 
-    def review_field(field_name: str, original: str, translation: str):
+    def review_field(field_name: str, original: Any, translation: Any):
         click.echo(f"\nField: {field_name}")
-        click.echo(f"Original ({original_lang}): {original}")
-        click.echo(f"Translation ({trans_lang}): {translation}")
+        click.echo(f"Original ({original_lang}): {json.dumps(original, ensure_ascii=False, indent=2)}")
+        click.echo(f"Translation ({trans_lang}): {json.dumps(translation, ensure_ascii=False, indent=2)}")
         
         while True:
             action = click.prompt("Actions: [n]ext, [c]omment, [q]uit", type=click.Choice(['n', 'c', 'q']), show_choices=False)
@@ -97,18 +97,16 @@ def interactive_review(json_data: Dict[str, Any], filename: str, trans_lang: str
         if 'description' in data:
             original = data['description'].get(original_lang, '')
             translation = data['description'].get('translations', {}).get(trans_lang, '')
-            if original or translation:
-                if not review_field(f"{prefix}description", original, translation):
-                    return False
+            if not review_field(f"{prefix}description", original, translation):
+                return False
 
         if 'media' in data:
             for i, item in enumerate(data['media']):
                 if 'content' in item:
                     original = item['content'].get(original_lang, '')
                     translation = item['content'].get('translations', {}).get(trans_lang, '')
-                    if original or translation:
-                        if not review_field(f"{prefix}media[{i}].content", original, translation):
-                            return False
+                    if not review_field(f"{prefix}media[{i}].content", original, translation):
+                        return False
         return True
 
     review_translations(json_data)
