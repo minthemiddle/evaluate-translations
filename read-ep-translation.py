@@ -12,7 +12,7 @@ def load_json_files(folder_path):
                 json_files.append((filename, json_data))
     return json_files
 
-def get_translations(json_data, target_lang):
+def get_translations(json_data, target_langs):
     translations = []
 
     # Media translations
@@ -21,32 +21,33 @@ def get_translations(json_data, target_lang):
         for lang, data in content.items():
             if lang != 'translations' and 'title' in data:
                 original = data['title']
-                translation = content.get('translations', {}).get(target_lang, {}).get('title')
-                if translation:
-                    translations.append(('Media', original, translation))
+                trans = {tl: content.get('translations', {}).get(tl, {}).get('title') for tl in target_langs}
+                if any(trans.values()):
+                    translations.append(('Media', original, trans))
 
     # Description translation
     description = json_data.get('description', {})
     for lang, original in description.items():
         if lang != 'translations':
-            translation = description.get('translations', {}).get(target_lang)
-            if translation:
-                translations.append(('Description', original, translation))
+            trans = {tl: description.get('translations', {}).get(tl) for tl in target_langs}
+            if any(trans.values()):
+                translations.append(('Description', original, trans))
 
     return translations
 
-def review_translations(translations, filename):
+def review_translations(translations, filename, target_langs):
     total = len(translations)
     current = 0
 
     while current < total:
         click.clear()
-        translation_type, original, translation = translations[current]
+        translation_type, original, trans = translations[current]
         click.echo(f"File: {filename}")
         click.echo(f"Type: {translation_type}")
         click.echo(f"Review {current + 1} of {total}")
         click.echo(f"\nOriginal: {original}")
-        click.echo(f"Translation: {translation}")
+        for lang in target_langs:
+            click.echo(f"Translation ({lang}): {trans.get(lang, 'N/A')}")
         
         choice = click.prompt("\nEnter 'n' for next, 'p' for previous, or 'q' to quit", type=click.Choice(['n', 'p', 'q']))
         
@@ -59,14 +60,18 @@ def review_translations(translations, filename):
 
 @click.command()
 @click.option('--folder', required=True, help='Path to the folder containing JSON files')
-@click.option('--to', required=True, help='Target language code (e.g., "en")')
+@click.option('--to', required=True, multiple=True, help='Target language code(s) (e.g., "en", "fr", "de"). Up to 3 languages.')
 def main(folder, to):
+    if len(to) > 3:
+        click.echo("Error: You can select up to 3 target languages.")
+        return
+
     json_files = load_json_files(folder)
     
     for filename, json_data in json_files:
         translations = get_translations(json_data, to)
         if translations:
-            review_translations(translations, filename)
+            review_translations(translations, filename, to)
         
         if not click.confirm("Continue to the next file?"):
             break
