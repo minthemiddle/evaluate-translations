@@ -41,23 +41,46 @@ def load_json_files(folder_path):
 def get_translations(json_data, target_langs):
     translations = []
 
-    # Media translations
-    for media in json_data.get('media', []):
-        content = media.get('content', {})
-        for lang, data in content.items():
-            if lang != 'translations' and 'title' in data:
-                original = data['title']
-                trans = {tl: content.get('translations', {}).get(tl, {}).get('title') for tl in target_langs}
-                if any(trans.values()):
-                    translations.append(('Media', original, trans))
+    if 'media' in json_data:  # SupplierFact case
+        # Media translations
+        for media in json_data.get('media', []):
+            content = media.get('content', {})
+            for lang, data in content.items():
+                if lang != 'translations' and 'title' in data:
+                    original = data['title']
+                    trans = {tl: content.get('translations', {}).get(tl, {}).get('title') for tl in target_langs}
+                    if any(trans.values()):
+                        translations.append(('Media', original, trans))
 
-    # Description translation
-    description = json_data.get('description', {})
-    for lang, original in description.items():
-        if lang != 'translations':
-            trans = {tl: description.get('translations', {}).get(tl) for tl in target_langs}
+        # Description translation
+        description = json_data.get('description', {})
+        for lang, original in description.items():
+            if lang != 'translations':
+                trans = {tl: description.get('translations', {}).get(tl) for tl in target_langs}
+                if any(trans.values()):
+                    translations.append(('Description', original, trans))
+
+    elif 'data' in json_data:  # SupplierOffer case
+        data = json_data['data']
+        
+        # Description translation
+        original = data.get('description', '')
+        trans = {tl: data.get('translations', {}).get('description', {}).get(tl) for tl in target_langs}
+        if any(trans.values()):
+            translations.append(('Description', original, trans))
+        
+        # Keywords translation
+        if 'keywords' in data and data['keywords']:
+            original = data['keywords'][0]
+            trans = {tl: data.get('translations', {}).get('keywords', [{}])[0].get(tl) for tl in target_langs}
             if any(trans.values()):
-                translations.append(('Description', original, trans))
+                translations.append(('Keywords', original, trans))
+        
+        # Name translation
+        original = data.get('name', '')
+        trans = {tl: data.get('translations', {}).get('name', {}).get(tl) for tl in target_langs}
+        if any(trans.values()):
+            translations.append(('Name', original, trans))
 
     return translations
 
