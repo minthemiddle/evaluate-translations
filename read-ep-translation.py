@@ -2,6 +2,10 @@ import os
 import json
 import click
 import sqlite3
+from colorama import init, Fore, Back, Style
+
+# Initialize colorama
+init(autoreset=True)
 
 def init_db():
     conn = sqlite3.connect('processed_files.db')
@@ -91,14 +95,14 @@ def review_translations(translations, filename, target_langs):
     while current < total:
         click.clear()
         translation_type, original, trans = translations[current]
-        click.echo(f"File: {filename}")
-        click.echo(f"Type: {translation_type}")
-        click.echo(f"Review {current + 1} of {total}")
-        click.echo(f"\nOriginal: {original}")
+        click.echo(f"{Fore.CYAN}File: {Style.RESET_ALL}{filename}")
+        click.echo(f"{Fore.CYAN}Type: {Style.RESET_ALL}{translation_type}")
+        click.echo(f"{Fore.CYAN}Review {Style.RESET_ALL}{current + 1} of {total}")
+        click.echo(f"\n{Fore.GREEN}Original: {Style.RESET_ALL}{original}")
         for lang in target_langs:
-            click.echo(f"Translation ({lang}): {trans.get(lang, 'N/A')}")
+            click.echo(f"{Fore.YELLOW}Translation ({lang}): {Style.RESET_ALL}{trans.get(lang, 'N/A')}")
         
-        choice = click.prompt("\nPress Enter for next, or enter 'p' for previous, 'c' for next company, or 'q' to quit", 
+        choice = click.prompt(f"\n{Fore.MAGENTA}Press Enter for next, or enter 'p' for previous, 'c' for next company, or 'q' to quit{Style.RESET_ALL}", 
                               type=click.Choice(['', 'n', 'p', 'c', 'q']), default='', show_default=False)
         
         if choice in ['', 'n']:
@@ -115,7 +119,7 @@ def review_translations(translations, filename, target_langs):
 @click.option('--to', required=True, multiple=True, help='Target language code(s) (e.g., "en", "fr", "de"). Up to 3 languages.')
 def main(folder, to):
     if len(to) > 3:
-        click.echo("Error: You can select up to 3 target languages.")
+        click.echo(f"{Fore.RED}Error: You can select up to 3 target languages.{Style.RESET_ALL}")
         return
 
     init_db()
@@ -123,7 +127,7 @@ def main(folder, to):
     
     for filename, json_data in json_files:
         if is_processed(filename):
-            click.echo(f"Skipping processed file: {filename}")
+            click.echo(f"{Fore.YELLOW}Skipping processed file: {Style.RESET_ALL}{filename}")
             continue
 
         translations = get_translations(json_data, to)
@@ -135,14 +139,14 @@ def main(folder, to):
                 mark_as_processed(filename)
                 continue
         else:
-            click.echo(f"No translations found for {filename}")
+            click.echo(f"{Fore.RED}No translations found for {Style.RESET_ALL}{filename}")
         
         mark_as_processed(filename)
         
-        if not click.confirm("Continue to the next file?"):
+        if not click.confirm(f"{Fore.CYAN}Continue to the next file?{Style.RESET_ALL}"):
             break
 
-    click.echo("Review completed.")
+    click.echo(f"{Fore.GREEN}Review completed.{Style.RESET_ALL}")
 
 if __name__ == '__main__':
     main()
