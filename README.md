@@ -55,8 +55,8 @@ This tool is designed to review and manage translations for JSON files. It inclu
 
 3. **Clone the Repository**: Clone the repository to your local machine using Git:
    ```bash
-   git clone https://github.com/yourusername/yourrepository.git
-   cd yourrepository
+   git clone https://github.com/minthemiddle/evaluate-translations.git
+   cd evaluate-translations
    ```
 
 ## Usage
@@ -75,10 +75,6 @@ To review translations for specified languages, run the following command:
 python review-translations-by-v-eu.py --folder /path/to/json/files --to en,es
 ```
 
-## Contributing
-
-If you would like to contribute to this project, please fork the repository and submit a pull request.
-
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for more details.
