@@ -75,6 +75,8 @@ To review translations for specified languages, run the following command:
 python review-translations-by-v-eu.py --folder /path/to/json/files --to en,es --reviewer "Reviewer Name"
 ```
 
+The `--reviewer` argument is optional and allows you to specify the name of the person doing the review. If provided, the reviewer's name will be displayed during the review process.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for more details.
