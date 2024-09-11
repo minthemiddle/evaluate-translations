@@ -72,7 +72,7 @@ python review-translations-by-v-cn.py --folder_path /path/to/json/files --intera
 
 To review translations for specified languages, run the following command:
 ```bash
-python review-translations-by-v-eu.py --folder /path/to/json/files --to en,es
+python review-translations-by-v-eu.py --folder /path/to/json/files --to en,es --reviewer "Reviewer Name"
 ```
 
 ## License
