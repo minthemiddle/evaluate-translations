@@ -88,7 +88,7 @@ def get_translations(json_data, target_langs):
 
     return translations
 
-def review_translations(translations, filename, target_langs):
+def review_translations(translations, filename, target_langs, reviewer=None):
     total = len(translations)
     current = 0
 
@@ -97,7 +97,9 @@ def review_translations(translations, filename, target_langs):
         translation_type, original, trans = translations[current]
         click.echo(f"{Fore.CYAN}File: {Style.RESET_ALL}{filename}")
         click.echo(f"{Fore.CYAN}Type: {Style.RESET_ALL}{translation_type}")
-        click.echo(f"{Fore.CYAN}Review {Style.RESET_ALL}{current + 1} of {total}")
+        click.echo(f"{Fore.CYAN}Review: {Style.RESET_ALL}{current + 1} of {total}")
+        if reviewer:
+            click.echo(f"{Fore.CYAN}Reviewer: {Style.RESET_ALL}{reviewer}")
         click.echo(f"\n{Fore.GREEN}Original: {Style.RESET_ALL}{original}")
         for lang in target_langs:
             click.echo(f"{Fore.YELLOW}Translation ({lang}): {Style.RESET_ALL}{trans.get(lang, 'N/A')}")
@@ -117,7 +119,8 @@ def review_translations(translations, filename, target_langs):
 @click.command()
 @click.option('--folder', required=True, help='Path to the folder containing JSON files')
 @click.option('--to', required=True, multiple=True, help='Target language code(s) (e.g., "en", "fr", "de"). Up to 3 languages.')
-def main(folder, to):
+@click.option('--reviewer', help='Name of the person doing the review')
+def main(folder, to, reviewer):
     if len(to) > 3:
         click.echo(f"{Fore.RED}Error: You can select up to 3 target languages.{Style.RESET_ALL}")
         return
@@ -132,7 +135,7 @@ def main(folder, to):
 
         translations = get_translations(json_data, to)
         if translations:
-            result = review_translations(translations, filename, to)
+            result = review_translations(translations, filename, to, reviewer)
             if result == 'quit':
                 break
             elif result == 'next_company':
