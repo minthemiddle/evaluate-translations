@@ -104,8 +104,10 @@ def review_translations(translations, filename, target_langs, reviewer=None):
             click.echo(f"{Fore.CYAN}Reviewer: {Style.RESET_ALL}{reviewer}")
         click.echo(f"{Fore.CYAN}Review Time: {Style.RESET_ALL}{review_time}")
         click.echo(f"\n{Fore.GREEN}Original: {Style.RESET_ALL}{original}")
+        click.echo()  # Empty line between original and translations
         for lang in target_langs:
             click.echo(f"{Fore.YELLOW}Translation ({lang}): {Style.RESET_ALL}{trans.get(lang, 'N/A')}")
+            click.echo()  # Empty line between different translations
         
         choice = click.prompt(f"\n{Fore.MAGENTA}Press Enter for next, or enter 'p' for previous, 'c' for next company, or 'q' to quit{Style.RESET_ALL}", 
                               type=click.Choice(['', 'n', 'p', 'c', 'q']), default='', show_default=False)
