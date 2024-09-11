@@ -2,6 +2,7 @@ import os
 import json
 import click
 import sqlite3
+from datetime import datetime
 from colorama import init, Fore, Back, Style
 
 # Initialize colorama
@@ -95,11 +96,13 @@ def review_translations(translations, filename, target_langs, reviewer=None):
     while current < total:
         click.clear()
         translation_type, original, trans = translations[current]
+        review_time = datetime.now().strftime("%Y-%m-%d %H:%M")
         click.echo(f"{Fore.CYAN}File: {Style.RESET_ALL}{filename}")
         click.echo(f"{Fore.CYAN}Type: {Style.RESET_ALL}{translation_type}")
         click.echo(f"{Fore.CYAN}Review: {Style.RESET_ALL}{current + 1} of {total}")
         if reviewer:
             click.echo(f"{Fore.CYAN}Reviewer: {Style.RESET_ALL}{reviewer}")
+        click.echo(f"{Fore.CYAN}Review Time: {Style.RESET_ALL}{review_time}")
         click.echo(f"\n{Fore.GREEN}Original: {Style.RESET_ALL}{original}")
         for lang in target_langs:
             click.echo(f"{Fore.YELLOW}Translation ({lang}): {Style.RESET_ALL}{trans.get(lang, 'N/A')}")
