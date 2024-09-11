@@ -16,7 +16,7 @@ This tool is designed to review and manage translations for JSON files. It inclu
 
 3. **Clone the Repository**: Clone the repository to your local machine using Git:
    ```bash
-   git clone https://github.com/yourusername/yourrepository.git
+   git clone https://github.com/minthemiddle/evaluate-translations
    cd yourrepository
    ```
 
@@ -35,7 +35,7 @@ This tool is designed to review and manage translations for JSON files. It inclu
 
 3. **Clone the Repository**: Clone the repository to your local machine using Git:
    ```bash
-   git clone https://github.com/yourusername/yourrepository.git
+   git clone https://github.com/minthemiddle/evaluate-translations
    cd yourrepository
    ```
 
@@ -55,7 +55,7 @@ This tool is designed to review and manage translations for JSON files. It inclu
 
 3. **Clone the Repository**: Clone the repository to your local machine using Git:
    ```bash
-   git clone https://github.com/minthemiddle/evaluate-translations.git
+   git clone https://github.com/minthemiddle/evaluate-translations
    cd evaluate-translations
    ```
 
