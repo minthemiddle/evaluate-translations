@@ -70,20 +70,23 @@ def get_translations(json_data, target_langs):
         
         # Description translation
         original = data.get('description', '')
-        trans = {tl: data.get('translations', {}).get('description', {}).get(tl) for tl in target_langs}
+        translations = data.get('translations', {})
+        trans = {tl: translations.get('description', {}).get(tl) if translations is not None else None for tl in target_langs}
         if any(trans.values()):
             translations.append(('Description', original, trans))
         
         # Keywords translation
         if 'keywords' in data and data['keywords']:
             original = data['keywords'][0]
-            trans = {tl: data.get('translations', {}).get('keywords', [{}])[0].get(tl) for tl in target_langs}
+            translations = data.get('translations', {})
+            trans = {tl: translations.get('keywords', [{}])[0].get(tl) if translations is not None else None for tl in target_langs}
             if any(trans.values()):
                 translations.append(('Keywords', original, trans))
         
         # Name translation
         original = data.get('name', '')
-        trans = {tl: data.get('translations', {}).get('name', {}).get(tl) for tl in target_langs}
+        translations = data.get('translations', {})
+        trans = {tl: translations.get('name', {}).get(tl) if translations is not None else None for tl in target_langs}
         if any(trans.values()):
             translations.append(('Name', original, trans))
 
